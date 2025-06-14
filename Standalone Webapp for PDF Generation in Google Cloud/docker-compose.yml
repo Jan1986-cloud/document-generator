@@ -1,0 +1,86 @@
+# Document Generator - Docker Compose
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: document-generator-db
+    environment:
+      POSTGRES_DB: document_generator
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./document-generator-backend
+      dockerfile: Dockerfile
+    container_name: document-generator-backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/document_generator
+      - JWT_SECRET_KEY=your-super-secret-jwt-key-change-in-production
+      - FLASK_ENV=development
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
+    ports:
+      - "5000:8080"
+    volumes:
+      - ./credentials:/app/credentials:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Web App
+  frontend:
+    build:
+      context: ./document-generator-frontend
+      dockerfile: Dockerfile
+    container_name: document-generator-frontend
+    ports:
+      - "3000:8080"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: document-generator-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: document-generator-network
+

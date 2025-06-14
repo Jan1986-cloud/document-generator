@@ -1,0 +1,156 @@
+PS C:\Users\Vulpe\ai\document-generator-repo> git add .
+warning: in the working copy of '.github/workflows/deploy.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker-compose.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/architectuur_document.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/implementatie-handleiding.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/project-oplevering.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/todo.md', LF will be replaced by CRLF the next time Git touches it
+error: 'document-generator-backend/' does not have a commit checked out
+fatal: adding files failed
+PS C:\Users\Vulpe\ai\document-generator-repo> git commit -m "Initial commit: Complete Document Generator"
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: unable to auto-detect email address (got 'Vulpe@PVMtop.(none)')
+PS C:\Users\Vulpe\ai\document-generator-repo> git remote add origin https://github.com/username/document-generator.git
+PS C:\Users\Vulpe\ai\document-generator-repo> git push -u origin main
+error: src refspec main does not match any
+error: failed to push some refs to 'https://github.com/username/document-generator.git'
+PS C:\Users\Vulpe\ai\document-generator-repo> # Verwijder alle .git folders in subdirectories
+PS C:\Users\Vulpe\ai\document-generator-repo> Remove-Item -Recurse -Force document-generator-backend\.git -ErrorAction SilentlyContinue
+PS C:\Users\Vulpe\ai\document-generator-repo> Remove-Item -Recurse -Force document-generator-frontend\.git -ErrorAction SilentlyContinue
+PS C:\Users\Vulpe\ai\document-generator-repo> git config --global user.name Jan1986-cloud
+PS C:\Users\Vulpe\ai\document-generator-repo> git config --global user.email jan@pvmonteur.nl
+PS C:\Users\Vulpe\ai\document-generator-repo> Remove-Item -Recurse -Force .git -ErrorAction SilentlyContinue
+PS C:\Users\Vulpe\ai\document-generator-repo> git init
+Initialized empty Git repository in C:/Users/Vulpe/AI/document-generator-repo/.git/
+PS C:\Users\Vulpe\ai\document-generator-repo> git add .
+warning: in the working copy of '.github/workflows/deploy.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker-compose.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/architectuur_document.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/implementatie-handleiding.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/project-oplevering.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/todo.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/Dockerfile', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/customer.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/database.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/document.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/order.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/organization.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/product.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/system.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/models/user.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/admin.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/auth.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/customers.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/dashboard.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/documents.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/orders.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/products.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/user.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/routes/users.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/services/google_docs_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/static/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/utils/auth.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-backend/src/utils/validators.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/Dockerfile', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/components.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/eslint.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/jsconfig.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/nginx.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/pnpm-lock.yaml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/App.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/App.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/layout/Header.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/layout/Sidebar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/LoadingSpinner.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/accordion.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/alert-dialog.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/alert.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/aspect-ratio.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/avatar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/badge.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/breadcrumb.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/button.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/calendar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/card.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/carousel.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/chart.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/checkbox.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/collapsible.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/command.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/context-menu.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/dialog.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/drawer.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/dropdown-menu.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/form.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/hover-card.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/input-otp.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/input.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/label.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/menubar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/navigation-menu.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/pagination.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/popover.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/progress.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/radio-group.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/resizable.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/scroll-area.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/select.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/separator.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/sheet.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/sidebar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/skeleton.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/slider.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/sonner.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/switch.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/table.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/tabs.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/textarea.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/toggle-group.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/toggle.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/components/ui/tooltip.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/contexts/AuthContext.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/contexts/ThemeContext.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/hooks/use-mobile.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/main.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/CustomersPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/DashboardPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/DocumentGeneratorPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/DocumentsPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/LoginPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/OrdersPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/ProductsPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/pages/SettingsPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/services/apiClient.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/src/services/authService.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'document-generator-frontend/vite.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/database_schema.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/deploy-to-gcp.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/google_sheets_sync.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/import_csv_data.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/migrate_database.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/setup-gcp.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'setup-github.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'terraform/main.tf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'terraform/variables.tf', LF will be replaced by CRLF the next time Git touches it
+PS C:\Users\Vulpe\ai\document-generator-repo>

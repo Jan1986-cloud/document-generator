@@ -1,0 +1,437 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: europe-west4
+  SERVICE_NAME: document-generator
+  REGISTRY_URL: europe-west4-docker.pkg.dev
+  
+jobs:
+  # Code Quality en Testing
+  test:
+    name: Test en Code Quality
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        pip install -r backend/requirements-dev.txt
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Lint Python code
+      run: |
+        cd backend
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Format check Python code
+      run: |
+        cd backend
+        black --check .
+        
+    - name: Lint TypeScript/JavaScript code
+      run: |
+        cd frontend
+        npm run lint
+        
+    - name: Type check TypeScript
+      run: |
+        cd frontend
+        npm run type-check
+        
+    - name: Run Python unit tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        FLASK_ENV: testing
+      run: |
+        cd backend
+        python -m pytest tests/ -v --cov=app --cov-report=xml
+        
+    - name: Run JavaScript/TypeScript tests
+      run: |
+        cd frontend
+        npm run test:ci
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+        
+    - name: Security scan Python dependencies
+      run: |
+        cd backend
+        pip install safety
+        safety check
+        
+    - name: Security scan Node.js dependencies
+      run: |
+        cd frontend
+        npm audit --audit-level moderate
+        
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: |
+          backend/coverage.xml
+          frontend/coverage/
+          
+  # Infrastructure Validation
+  terraform:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+        
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+      
+    - name: Terraform Init
+      run: terraform init -backend=false
+      
+    - name: Terraform Validate
+      run: terraform validate
+      
+    - name: Terraform Plan (Dry Run)
+      run: terraform plan -var="project_id=dummy" -var="notification_email=test@example.com"
+      
+  # Build en Push Docker Images
+  build:
+    name: Build en Push Images
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      
+    - name: Configure Docker for Artifact Registry
+      run: gcloud auth configure-docker ${{ env.REGISTRY_URL }}
+      
+    - name: Build backend image
+      run: |
+        docker build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:${{ github.sha }} \
+                     -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:latest \
+                     ./backend
+                     
+    - name: Build frontend image
+      run: |
+        docker build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/frontend:${{ github.sha }} \
+                     -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/frontend:latest \
+                     ./frontend
+                     
+    - name: Push backend image
+      run: |
+        docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:${{ github.sha }}
+        docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:latest
+        
+    - name: Push frontend image
+      run: |
+        docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/frontend:${{ github.sha }}
+        docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/frontend:latest
+        
+  # Deploy naar Staging
+  deploy-staging:
+    name: Deploy naar Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      
+    - name: Deploy backend to Cloud Run
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }}-backend-staging \
+          --image=${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:${{ github.sha }} \
+          --platform=managed \
+          --region=${{ env.REGION }} \
+          --allow-unauthenticated \
+          --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
+          --set-env-vars="ENVIRONMENT=staging" \
+          --set-env-vars="DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}" \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}" \
+          --memory=512Mi \
+          --cpu=1 \
+          --min-instances=0 \
+          --max-instances=5 \
+          --timeout=300
+          
+    - name: Deploy frontend to Cloud Run
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }}-frontend-staging \
+          --image=${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/frontend:${{ github.sha }} \
+          --platform=managed \
+          --region=${{ env.REGION }} \
+          --allow-unauthenticated \
+          --set-env-vars="REACT_APP_API_URL=${{ secrets.STAGING_API_URL }}" \
+          --set-env-vars="REACT_APP_ENVIRONMENT=staging" \
+          --memory=256Mi \
+          --cpu=1 \
+          --min-instances=0 \
+          --max-instances=3 \
+          --timeout=60
+          
+    - name: Run database migrations
+      run: |
+        gcloud run jobs create migration-staging \
+          --image=${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:${{ github.sha }} \
+          --region=${{ env.REGION }} \
+          --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
+          --set-env-vars="DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}" \
+          --command="python" \
+          --args="-m,flask,db,upgrade" \
+          --max-retries=3 \
+          --parallelism=1 \
+          --task-count=1 || true
+          
+        gcloud run jobs execute migration-staging --region=${{ env.REGION }} --wait
+        
+    - name: Run smoke tests
+      run: |
+        # Wacht tot services beschikbaar zijn
+        sleep 30
+        
+        # Test backend health endpoint
+        BACKEND_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }}-backend-staging --region=${{ env.REGION }} --format="value(status.url)")
+        curl -f "$BACKEND_URL/health" || exit 1
+        
+        # Test frontend
+        FRONTEND_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }}-frontend-staging --region=${{ env.REGION }} --format="value(status.url)")
+        curl -f "$FRONTEND_URL" || exit 1
+        
+  # Deploy naar Productie
+  deploy-production:
+    name: Deploy naar Productie
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      
+    - name: Deploy backend to Cloud Run
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }}-backend \
+          --image=${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:${{ github.sha }} \
+          --platform=managed \
+          --region=${{ env.REGION }} \
+          --no-allow-unauthenticated \
+          --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
+          --set-env-vars="ENVIRONMENT=production" \
+          --set-env-vars="DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}" \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}" \
+          --memory=1Gi \
+          --cpu=2 \
+          --min-instances=1 \
+          --max-instances=10 \
+          --timeout=300 \
+          --vpc-connector=${{ secrets.VPC_CONNECTOR }}
+          
+    - name: Deploy frontend to Cloud Run
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }}-frontend \
+          --image=${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/frontend:${{ github.sha }} \
+          --platform=managed \
+          --region=${{ env.REGION }} \
+          --allow-unauthenticated \
+          --set-env-vars="REACT_APP_API_URL=${{ secrets.PRODUCTION_API_URL }}" \
+          --set-env-vars="REACT_APP_ENVIRONMENT=production" \
+          --memory=512Mi \
+          --cpu=1 \
+          --min-instances=1 \
+          --max-instances=5 \
+          --timeout=60
+          
+    - name: Run database migrations
+      run: |
+        gcloud run jobs create migration-production \
+          --image=${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend:${{ github.sha }} \
+          --region=${{ env.REGION }} \
+          --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
+          --set-env-vars="DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}" \
+          --command="python" \
+          --args="-m,flask,db,upgrade" \
+          --max-retries=3 \
+          --parallelism=1 \
+          --task-count=1 \
+          --vpc-connector=${{ secrets.VPC_CONNECTOR }} || true
+          
+        gcloud run jobs execute migration-production --region=${{ env.REGION }} --wait
+        
+    - name: Update traffic to new revision
+      run: |
+        # Gradual rollout: 10% naar nieuwe versie
+        gcloud run services update-traffic ${{ env.SERVICE_NAME }}-backend \
+          --region=${{ env.REGION }} \
+          --to-revisions=LATEST=10
+          
+        # Wacht 5 minuten en monitor
+        sleep 300
+        
+        # Als alles goed gaat, 100% traffic naar nieuwe versie
+        gcloud run services update-traffic ${{ env.SERVICE_NAME }}-backend \
+          --region=${{ env.REGION }} \
+          --to-revisions=LATEST=100
+          
+        gcloud run services update-traffic ${{ env.SERVICE_NAME }}-frontend \
+          --region=${{ env.REGION }} \
+          --to-revisions=LATEST=100
+          
+    - name: Run production smoke tests
+      run: |
+        # Test backend health endpoint
+        BACKEND_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }}-backend --region=${{ env.REGION }} --format="value(status.url)")
+        curl -f "$BACKEND_URL/health" || exit 1
+        
+        # Test frontend
+        FRONTEND_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }}-frontend --region=${{ env.REGION }} --format="value(status.url)")
+        curl -f "$FRONTEND_URL" || exit 1
+        
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "✅ Deployment naar productie succesvol!"
+        # Hier kun je een Slack/Teams notificatie toevoegen
+        
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        echo "❌ Deployment gefaald, rollback wordt uitgevoerd..."
+        
+        # Rollback naar vorige versie
+        gcloud run services update-traffic ${{ env.SERVICE_NAME }}-backend \
+          --region=${{ env.REGION }} \
+          --to-revisions=LATEST=0
+          
+        gcloud run services update-traffic ${{ env.SERVICE_NAME }}-frontend \
+          --region=${{ env.REGION }} \
+          --to-revisions=LATEST=0
+          
+  # Cleanup oude images
+  cleanup:
+    name: Cleanup oude images
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      
+    - name: Cleanup oude images
+      run: |
+        # Bewaar alleen de laatste 10 images
+        gcloud artifacts docker images list ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/backend \
+          --sort-by="~CREATE_TIME" \
+          --limit=999 \
+          --format="value(IMAGE)" | tail -n +11 | while read image; do
+          gcloud artifacts docker images delete "$image" --quiet || true
+        done
+        
+        gcloud artifacts docker images list ${{ env.REGISTRY_URL }}/${{ env.PROJECT_ID }}/document-generator/frontend \
+          --sort-by="~CREATE_TIME" \
+          --limit=999 \
+          --format="value(IMAGE)" | tail -n +11 | while read image; do
+          gcloud artifacts docker images delete "$image" --quiet || true
+        done
+

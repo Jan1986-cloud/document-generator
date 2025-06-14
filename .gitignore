@@ -118,3 +118,5 @@ coverage.xml
 local/
 dev/
 
+deployment-sa-key.json
+*.exe
