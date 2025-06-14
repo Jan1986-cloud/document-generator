@@ -158,3 +158,4 @@ Voor vragen en ondersteuning, raadpleeg de documentatie in de `docs/` folder of 
 
 **Status: ✅ Productie-klaar**
 
+Ready for deployment
