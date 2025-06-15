@@ -162,7 +162,7 @@ jobs:
     - name: Configure Docker
       run: gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
 
-    - name: Build and Push Backend
+    - name: Build and Deploy Backend
       id: deploy-backend
       run: |
         IMAGE_URL=${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}
@@ -186,17 +186,17 @@ jobs:
         BACKEND_URL=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} --region=${{ secrets.REGION }} --format="value(status.url)")
         echo "backend-url=$BACKEND_URL" >> $GITHUB_OUTPUT
 
-    - name: Deploy Frontend
+    - name: Build and Deploy Frontend
       id: deploy-frontend
       run: |
         IMAGE_URL=${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.FRONTEND_SERVICE }}
-
+        
         cd document-generator-frontend
 
         # Build en push de image
         docker build -t $IMAGE_URL:$GITHUB_SHA .
         docker push $IMAGE_URL:$GITHUB_SHA
-
+        
         # Deploy naar Cloud Run
         gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
           --image $IMAGE_URL:$GITHUB_SHA \
@@ -207,6 +207,34 @@ jobs:
         # Get frontend URL
         FRONTEND_URL=$(gcloud run services describe ${{ env.FRONTEND_SERVICE }} --region=${{ secrets.REGION }} --format="value(status.url)")
         echo "frontend-url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+
+    - name: Run Database Migrations
+      run: |
+        IMAGE_URL=${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}
+        
+        gcloud run jobs create migrate-database-staging \
+          --image $IMAGE_URL:$GITHUB_SHA \
+          --region ${{ secrets.REGION }} \
+          --service-account ${{ secrets.GCP_SA_EMAIL }} \
+          --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
+          --set-secrets "DATABASE_URL=db-app-password:latest" \
+          --command "flask" \
+          --args "db,upgrade" \
+          --replace
+
+        gcloud run jobs execute migrate-database-staging --region ${{ secrets.REGION }} --wait
+
+    - name: Comment PR with staging URL
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `🚀 Staging deployment completed!\n\n**Frontend:** ${{ steps.deploy-frontend.outputs.frontend-url }}\n**Backend:** ${{ steps.deploy-backend.outputs.backend-url }}`
+          })
 
   # Deploy to Production (on production branch)
   deploy-production:
