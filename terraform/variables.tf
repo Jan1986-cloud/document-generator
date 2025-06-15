@@ -3,6 +3,7 @@
 variable "project_id" {
   description = "Google Cloud Project ID"
   type        = string
+  default     = "gen-lang-client-0695866337"
   validation {
     condition     = length(var.project_id) > 0
     error_message = "Project ID mag niet leeg zijn."
@@ -26,6 +27,12 @@ variable "zone" {
   description = "Google Cloud Zone"
   type        = string
   default     = "europe-west4-a"
+}
+
+variable "multi_region_location" {
+  description = "De multi-regio voor resources zoals Storage Buckets en Cloud Tasks."
+  type        = string
+  default     = "eu"
 }
 
 variable "environment" {
@@ -84,6 +91,7 @@ variable "db_disk_size" {
 variable "notification_email" {
   description = "Email adres voor monitoring notificaties"
   type        = string
+  default     = "jan@pvmonteur.nl"
   validation {
     condition     = can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.notification_email))
     error_message = "Notification email moet een geldig email adres zijn."

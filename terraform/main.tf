@@ -57,8 +57,8 @@ resource "random_password" "db_password" {
 # Google Cloud APIs activeren
 resource "google_project_service" "apis" {
   for_each = toset([
-    "cloudsql.googleapis.com",
     "run.googleapis.com",
+    "servicenetworking.googleapis.com",
     "storage.googleapis.com",
     "iam.googleapis.com",
     "docs.googleapis.com",
@@ -186,7 +186,7 @@ resource "google_compute_firewall" "allow_internal" {
 
 # VPC Access Connector voor Cloud Run
 resource "google_vpc_access_connector" "connector" {
-  name          = "${local.app_name}-connector"
+  name          = "doc-gen-connector"
   region        = var.region
   project       = var.project_id
   ip_cidr_range = "10.8.0.0/28"
@@ -316,7 +316,7 @@ resource "google_secret_manager_secret_version" "db_password" {
 # Cloud Storage Buckets
 resource "google_storage_bucket" "documents" {
   name          = "${local.app_name}-docs-${var.project_id}"
-  location      = var.region
+  location      = var.multi_region_location
   project       = var.project_id
   force_destroy = var.environment != "production"
   
@@ -340,7 +340,7 @@ resource "google_storage_bucket" "documents" {
 
 resource "google_storage_bucket" "templates" {
   name          = "${local.app_name}-templates-${var.project_id}"
-  location      = var.region
+  location      = var.multi_region_location
   project       = var.project_id
   force_destroy = var.environment != "production"
   
@@ -355,7 +355,7 @@ resource "google_storage_bucket" "templates" {
 
 resource "google_storage_bucket" "backups" {
   name          = "${local.app_name}-backups-${var.project_id}"
-  location      = var.region
+  location      = var.multi_region_location
   project       = var.project_id
   force_destroy = var.environment != "production"
   
@@ -413,7 +413,7 @@ resource "google_artifact_registry_repository" "docker_repo" {
 # Cloud Tasks Queue
 resource "google_cloud_tasks_queue" "document_generation" {
   name     = "document-generation"
-  location = var.region
+  location = "europe-west1"
   project  = var.project_id
   
   rate_limits {
@@ -445,6 +445,7 @@ resource "google_monitoring_notification_channel" "email" {
   depends_on = [google_project_service.apis]
 }
 
+/*
 # Alerting Policy voor hoge error rate
 resource "google_monitoring_alert_policy" "high_error_rate" {
   display_name = "High Error Rate"
@@ -455,8 +456,8 @@ resource "google_monitoring_alert_policy" "high_error_rate" {
     display_name = "Cloud Run Error Rate"
     
     condition_threshold {
-      filter          = "resource.type=\"cloud_run_revision\""
-      comparison      = "COMPARISON_GREATER_THAN"
+      filter          = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"document-generator\""
+      comparison      = "COMPARISON_GT"
       threshold_value = 0.05  # 5% error rate
       duration        = "300s"
       
@@ -475,6 +476,7 @@ resource "google_monitoring_alert_policy" "high_error_rate" {
   
   depends_on = [google_project_service.apis]
 }
+*/
 
 # Outputs
 output "project_id" {
