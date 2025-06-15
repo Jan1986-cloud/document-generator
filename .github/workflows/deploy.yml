@@ -63,7 +63,7 @@ jobs:
         FLASK_ENV: testing
       run: |
         # Create test database tables
-        python -c "from src.models.database import db; db.create_all()"
+        python create_tables.py
         
         # Run tests (when implemented)
         # pytest tests/ --cov=src --cov-report=xml
@@ -98,7 +98,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: ./document-generator-frontend
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --no-frozen-lockfile
 
     - name: Run linting
       working-directory: ./document-generator-frontend
@@ -143,36 +143,33 @@ jobs:
 
   # Deploy to Staging (on main branch)
   deploy-staging:
-    # # needs: [test-backend, test-frontend] # Temporarily bypassed
+    needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    environment:
-      name: staging
-      url: ${{ steps.deploy.outputs.frontend-url }}
+    permissions:
+     contents: 'read'
+     id-token: 'write' # Dit is nodig voor de authenticatie
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Google Cloud CLI
-      uses: google-github-actions/setup-gcloud@v1
+    # AUTHENTICATIE (NIEUW EN CORRECT)
+    - name: Authenticate to Google Cloud
+      uses: 'google-github-actions/auth@v2'
       with:
-        service_account_key: ${{ secrets.GOOGLE_CLOUD_SA_KEY }}
-        project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.WIF_POOL_ID }}/providers/${{ secrets.WIF_PROVIDER_ID }}'
+        service_account: '${{ secrets.GCP_SA_EMAIL }}'
 
-    - name: Configure Docker to use gcloud as a credential helper
-      run: gcloud auth configure-docker
+    # Configureer Docker voor Artifact Registry
+    - name: Configure Docker
+      run: gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
 
-    - name: Deploy Backend to Cloud Run
-      id: deploy-backend
+    # Backend bouwen en pushen (CORRECTE URL)
+    - name: Build and Push Backend
       run: |
-        cd document-generator-backend
-        
-        # Build and push image
-        docker build -t gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA .
-        docker push gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA
-        
+        docker build -t ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}:$GITHUB_SHA ./document-generator-backend
+        docker push ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}:$GITHUB_SHA
+
         # Deploy to Cloud Run
         gcloud run deploy $BACKEND_SERVICE-staging \
           --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA \
