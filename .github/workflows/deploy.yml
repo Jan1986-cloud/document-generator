@@ -146,115 +146,67 @@ jobs:
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     permissions:
-     contents: 'read'
-     id-token: 'write' # Dit is nodig voor de authenticatie
+      contents: 'read'
+      id-token: 'write'
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # AUTHENTICATIE (NIEUW EN CORRECT)
     - name: Authenticate to Google Cloud
       id: auth
       uses: 'google-github-actions/auth@v2'
       with:
         credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-    # Configureer Docker voor Artifact Registry
     - name: Configure Docker
       run: gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
 
-    # Backend bouwen en pushen (CORRECTE URL)
     - name: Build and Push Backend
+      id: deploy-backend
       run: |
-        docker build -t ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}:$GITHUB_SHA ./document-generator-backend
-        docker push ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}:$GITHUB_SHA
-
-        # Deploy to Cloud Run
-        gcloud run deploy $BACKEND_SERVICE-staging \
-          --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA \
-          --platform managed \
-          --region $REGION \
-          --allow-unauthenticated \
-          --service-account ${{ secrets.SERVICE_ACCOUNT_EMAIL }} \
-          --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
-          --set-secrets "DATABASE_URL=database-url-staging:latest,JWT_SECRET_KEY=jwt-secret-key-staging:latest" \
-          --memory 1Gi \
-          --cpu 1 \
-          --concurrency 80 \
-          --timeout 300 \
-          --max-instances 5 \
-          --port 8080 \
-          --tag staging
+        IMAGE_URL=${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}
         
+        # Build en push de image
+        docker build -t $IMAGE_URL:$GITHUB_SHA ./document-generator-backend
+        docker push $IMAGE_URL:$GITHUB_SHA
+        
+        # Deploy naar Cloud Run
+        gcloud run deploy ${{ env.BACKEND_SERVICE }} \
+          --image $IMAGE_URL:$GITHUB_SHA \
+          --platform managed \
+          --region ${{ secrets.REGION }} \
+          --allow-unauthenticated \
+          --service-account ${{ secrets.GCP_SA_EMAIL }} \
+          --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
+          --set-secrets "DATABASE_URL=db-app-password:latest" \
+          --tag staging
+
         # Get backend URL
-        BACKEND_URL=$(gcloud run services describe $BACKEND_SERVICE-staging --region=$REGION --format="value(status.url)")
+        BACKEND_URL=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} --region=${{ secrets.REGION }} --format="value(status.url)")
         echo "backend-url=$BACKEND_URL" >> $GITHUB_OUTPUT
 
-    - name: Deploy Frontend to Cloud Run
+    - name: Deploy Frontend
       id: deploy-frontend
       run: |
+        IMAGE_URL=${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/${{ env.FRONTEND_SERVICE }}
+
         cd document-generator-frontend
-        
-        # Create production environment file
-        cat > .env.production << EOF
-        VITE_API_BASE_URL=${{ steps.deploy-backend.outputs.backend-url }}/api
-        VITE_APP_NAME=Document Generator (Staging)
-        VITE_APP_VERSION=$GITHUB_SHA
-        VITE_GOOGLE_CLOUD_PROJECT=$PROJECT_ID
-        VITE_ENABLE_REGISTRATION=true
-        VITE_ENABLE_DARK_MODE=true
-        VITE_ENABLE_NOTIFICATIONS=true
-        VITE_DEBUG_MODE=false
-        EOF
-        
-        # Build and push image
-        docker build -t gcr.io/$PROJECT_ID/$FRONTEND_SERVICE:$GITHUB_SHA .
-        docker push gcr.io/$PROJECT_ID/$FRONTEND_SERVICE:$GITHUB_SHA
-        
-        # Deploy to Cloud Run
-        gcloud run deploy $FRONTEND_SERVICE-staging \
-          --image gcr.io/$PROJECT_ID/$FRONTEND_SERVICE:$GITHUB_SHA \
+
+        # Build en push de image
+        docker build -t $IMAGE_URL:$GITHUB_SHA .
+        docker push $IMAGE_URL:$GITHUB_SHA
+
+        # Deploy naar Cloud Run
+        gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
+          --image $IMAGE_URL:$GITHUB_SHA \
           --platform managed \
-          --region $REGION \
-          --allow-unauthenticated \
-          --memory 512Mi \
-          --cpu 1 \
-          --concurrency 80 \
-          --timeout 60 \
-          --max-instances 3 \
-          --port 8080 \
-          --tag staging
-        
+          --region ${{ secrets.REGION }} \
+          --allow-unauthenticated
+
         # Get frontend URL
-        FRONTEND_URL=$(gcloud run services describe $FRONTEND_SERVICE-staging --region=$REGION --format="value(status.url)")
+        FRONTEND_URL=$(gcloud run services describe ${{ env.FRONTEND_SERVICE }} --region=${{ secrets.REGION }} --format="value(status.url)")
         echo "frontend-url=$FRONTEND_URL" >> $GITHUB_OUTPUT
-
-    - name: Run Database Migrations
-      run: |
-        gcloud run jobs create migrate-database-staging \
-          --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA \
-          --region $REGION \
-          --service-account ${{ secrets.SERVICE_ACCOUNT_EMAIL }} \
-          --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
-          --set-secrets "DATABASE_URL=database-url-staging:latest" \
-          --command "python" \
-          --args "-c,\"from src.models.database import db; db.create_all(); print('Database tables created successfully')\"" \
-          --replace
-        
-        gcloud run jobs execute migrate-database-staging --region $REGION --wait
-
-    - name: Comment PR with staging URL
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `🚀 Staging deployment completed!\n\n**Frontend:** ${{ steps.deploy-frontend.outputs.frontend-url }}\n**Backend:** ${{ steps.deploy-backend.outputs.backend-url }}`
-          })
 
   # Deploy to Production (on production branch)
   deploy-production:
