@@ -183,7 +183,7 @@ jobs:
           --platform managed \
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --service-account ${{ env.GCP_SA_EMAIL }} \
+          --service-account ${{ secrets.GCP_APP_SA_EMAIL }} \
           --add-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
           --tag staging
