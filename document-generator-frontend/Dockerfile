@@ -29,8 +29,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Kopieer de gebouwde bestanden uit de vorige "build" stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Maak poort 80 beschikbaar voor NGINX
-EXPOSE 80
+# Maak poort 8080 beschikbaar voor NGINX
+EXPOSE 8080
 
 # Start NGINX op de voorgrond wanneer de container start
 CMD ["nginx", "-g", "daemon off;"]
