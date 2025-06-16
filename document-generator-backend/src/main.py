@@ -10,6 +10,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from google.cloud.sql.connector import Connector
 
 # Load environment variables
 load_dotenv()
@@ -42,21 +43,52 @@ def create_app(config_name='development'):
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     
     # Database configuration
-    database_url = os.getenv('DATABASE_URL')
-    if database_url:
-        # Handle postgres:// vs postgresql:// URL schemes
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    else:
-        # Fallback to SQLite for development
-        app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-    
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-    }
+    def configure_database(app):
+        """Configure SQLAlchemy to use Cloud SQL Connector if available."""
+        connector = None
+
+        instance_connection_name = os.getenv('INSTANCE_CONNECTION_NAME')
+        db_user = os.getenv('DB_USER')
+        db_pass = os.getenv('DB_PASS')
+        db_name = os.getenv('DB_NAME')
+
+        if all([instance_connection_name, db_user, db_pass, db_name]):
+            connector = Connector()
+
+            def getconn():
+                return connector.connect(
+                    instance_connection_name,
+                    "psycopg2",
+                    user=db_user,
+                    password=db_pass,
+                    db=db_name,
+                )
+
+            app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://'
+            app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+                'creator': getconn,
+                'pool_pre_ping': True,
+                'pool_recycle': 300,
+            }
+        else:
+            database_url = os.getenv('DATABASE_URL')
+            if database_url:
+                if database_url.startswith('postgres://'):
+                    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+                app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+            else:
+                app.config['SQLALCHEMY_DATABASE_URI'] = (
+                    f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+                )
+
+            app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+                'pool_pre_ping': True,
+                'pool_recycle': 300,
+            }
+
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    configure_database(app)
     
     # JWT Configuration
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', app.config['SECRET_KEY'])
