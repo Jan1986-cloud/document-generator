@@ -220,8 +220,7 @@ jobs:
           --set-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
           --command "flask" \
-          --args "db,upgrade" \
-          --replace
+          --args "db,upgrade"
           
         gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait
 
