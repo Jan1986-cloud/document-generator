@@ -155,7 +155,7 @@ jobs:
       BACKEND_SERVICE: 'document-generator-backend'
       FRONTEND_SERVICE: 'document-generator-frontend'
       CLOUDSQL_INSTANCE: ${{ secrets.CLOUDSQL_INSTANCE }}
-      GCP_SA_EMAIL: ${{ secrets.GCP_SA_EMAIL }}
+      GCP_APP_SA_EMAIL: ${{ secrets.GCP_APP_SA_EMAIL }}
 
     steps:
     - name: Checkout repository
@@ -213,15 +213,15 @@ jobs:
       run: |
         IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}"
         
-        gcloud run jobs create migrate-database-staging \
+        gcloud run jobs deploy migrate-database-staging \
           --image $IMAGE_URL:$GITHUB_SHA \
           --region ${{ env.REGION }} \
-          --service-account ${{ env.GCP_SA_EMAIL }} \
-          --add-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
+          --service-account ${{ env.GCP_APP_SA_EMAIL }} \
+          --set-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
+          --set-env-vars "FLASK_APP=src.main:app" \
           --command "flask" \
-          --args "db,upgrade" \
-          --replace
+          --args "db,upgrade"
           
         gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait
 
@@ -242,10 +242,13 @@ jobs:
     needs: [test-backend, test-frontend, security-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/production' && github.event_name == 'push'
-    
+
     environment:
       name: production
       url: ${{ steps.deploy.outputs.frontend-url }}
+
+    env:
+      ARTIFACT_REPO: ${{ secrets.ARTIFACT_REPO }}
 
     steps:
     - name: Checkout code
@@ -264,18 +267,20 @@ jobs:
       id: deploy-backend
       run: |
         cd document-generator-backend
-        
+
+        IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}"
+
         # Build and push image
-        docker build -t gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA .
-        docker push gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA
-        
+        docker build -t $IMAGE_URL:$GITHUB_SHA .
+        docker push $IMAGE_URL:$GITHUB_SHA
+
         # Deploy to Cloud Run
         gcloud run deploy $BACKEND_SERVICE \
-          --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA \
+          --image $IMAGE_URL:$GITHUB_SHA \
           --platform managed \
           --region $REGION \
           --allow-unauthenticated \
-          --service-account ${{ secrets.SERVICE_ACCOUNT_EMAIL }} \
+          --service-account ${{ secrets.GCP_APP_SA_EMAIL }} \
           --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=database-url:latest,JWT_SECRET_KEY=jwt-secret-key:latest" \
           --memory 2Gi \
@@ -306,13 +311,15 @@ jobs:
         VITE_DEBUG_MODE=false
         EOF
         
+        IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.FRONTEND_SERVICE }}"
+
         # Build and push image
-        docker build -t gcr.io/$PROJECT_ID/$FRONTEND_SERVICE:$GITHUB_SHA .
-        docker push gcr.io/$PROJECT_ID/$FRONTEND_SERVICE:$GITHUB_SHA
+        docker build -t $IMAGE_URL:$GITHUB_SHA .
+        docker push $IMAGE_URL:$GITHUB_SHA
         
         # Deploy to Cloud Run
         gcloud run deploy $FRONTEND_SERVICE \
-          --image gcr.io/$PROJECT_ID/$FRONTEND_SERVICE:$GITHUB_SHA \
+          --image $IMAGE_URL:$GITHUB_SHA \
           --platform managed \
           --region $REGION \
           --allow-unauthenticated \
@@ -329,15 +336,16 @@ jobs:
 
     - name: Run Database Migrations
       run: |
-        gcloud run jobs create migrate-database \
-          --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE:$GITHUB_SHA \
+        IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}"
+
+        gcloud run jobs deploy migrate-database \
+          --image $IMAGE_URL:$GITHUB_SHA \
           --region $REGION \
-          --service-account ${{ secrets.SERVICE_ACCOUNT_EMAIL }} \
-          --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
+          --service-account ${{ secrets.GCP_APP_SA_EMAIL }} \
+          --set-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=database-url:latest" \
           --command "python" \
-          --args "-c,\"from src.models.database import db; db.create_all(); print('Database tables created successfully')\"" \
-          --replace
+          --args "-c,\"from src.models.database import db; db.create_all(); print('Database tables created successfully')\""
         
         gcloud run jobs execute migrate-database --region $REGION --wait
 

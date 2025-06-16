@@ -9,6 +9,7 @@ set -e
 PROJECT_ID="${GOOGLE_CLOUD_PROJECT:-your-project-id}"
 REGION="${GOOGLE_CLOUD_REGION:-europe-west4}"
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_EMAIL:-document-generator@${PROJECT_ID}.iam.gserviceaccount.com}"
+ARTIFACT_REPO="${ARTIFACT_REPO:-document-generator}"
 
 # Service names
 BACKEND_SERVICE="document-generator-backend"
@@ -130,11 +131,12 @@ echo "🏗️ Building and deploying backend..."
 cd document-generator-backend
 
 # Build the container image
-gcloud builds submit --tag gcr.io/$PROJECT_ID/$BACKEND_SERVICE
+IMAGE_URL="$REGION-docker.pkg.dev/$PROJECT_ID/$ARTIFACT_REPO/$BACKEND_SERVICE"
+gcloud builds submit --tag $IMAGE_URL
 
 # Deploy to Cloud Run
 gcloud run deploy $BACKEND_SERVICE \
-    --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE \
+    --image $IMAGE_URL \
     --platform managed \
     --region $REGION \
     --allow-unauthenticated \
@@ -172,11 +174,12 @@ VITE_DEBUG_MODE=false
 EOF
 
 # Build the container image
-gcloud builds submit --tag gcr.io/$PROJECT_ID/$FRONTEND_SERVICE
+IMAGE_URL_FRONTEND="$REGION-docker.pkg.dev/$PROJECT_ID/$ARTIFACT_REPO/$FRONTEND_SERVICE"
+gcloud builds submit --tag $IMAGE_URL_FRONTEND
 
 # Deploy to Cloud Run
 gcloud run deploy $FRONTEND_SERVICE \
-    --image gcr.io/$PROJECT_ID/$FRONTEND_SERVICE \
+    --image $IMAGE_URL_FRONTEND \
     --platform managed \
     --region $REGION \
     --allow-unauthenticated \
@@ -195,11 +198,11 @@ cd ..
 
 # Run database migrations
 echo "🔄 Running database migrations..."
-gcloud run jobs create migrate-database \
-    --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE \
+gcloud run jobs deploy migrate-database \
+    --image $IMAGE_URL \
     --region $REGION \
     --service-account $SERVICE_ACCOUNT_EMAIL \
-    --add-cloudsql-instances $PROJECT_ID:$REGION:$DB_INSTANCE_NAME \
+    --set-cloudsql-instances $PROJECT_ID:$REGION:$DB_INSTANCE_NAME \
     --set-secrets "DATABASE_URL=database-url:latest" \
     --command "python" \
     --args "-c,\"from src.models.database import db; db.create_all(); print('Database tables created successfully')\""
