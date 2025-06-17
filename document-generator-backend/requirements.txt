@@ -1,5 +1,4 @@
-# Force cache invalidation
-
+# Correcte en volledige lijst van dependencies
 alembic==1.16.1
 blinker==1.9.0
 cachetools==5.5.2
