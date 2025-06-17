@@ -98,7 +98,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: ./document-generator-frontend
-      run: pnpm install --no-frozen-lockfile
+      run: pnpm install --frozen-lockfile=false
 
     - name: Run linting
       working-directory: ./document-generator-frontend
@@ -149,7 +149,7 @@ jobs:
       contents: 'read'
       id-token: 'write'
     env:
-      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
       REGION: ${{ secrets.REGION }}
       ARTIFACT_REPO: ${{ secrets.ARTIFACT_REPO }}
       BACKEND_SERVICE: 'document-generator-backend'
@@ -219,6 +219,7 @@ jobs:
           --service-account ${{ env.GCP_APP_SA_EMAIL }} \
           --set-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
+          --set-env-vars "FLASK_APP=src.main" \
           --command "flask" \
           --args "db,upgrade"
           
