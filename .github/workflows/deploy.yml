@@ -219,7 +219,7 @@ jobs:
           --service-account ${{ env.GCP_APP_SA_EMAIL }} \
           --set-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
-          --set-env-vars "FLASK_APP=src.main" \
+          --set-env-vars "FLASK_APP=app" \
           --command "flask" \
           --args "db,upgrade"
 
