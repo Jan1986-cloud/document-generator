@@ -54,6 +54,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-cov
+
     - name: Run tests
       working-directory: ./document-generator-backend
       env:
@@ -224,24 +225,17 @@ jobs:
           --set-env-vars "FLASK_APP=app" \
           --command "flask" \
           --args "db upgrade"
+
     - name: Show Migration Job Network Config
       run: gcloud run jobs describe migrate-database-staging --region ${{ env.REGION }}
 
-    # CORRECTE CODE ZONDER CONFLICT
     - name: Execute Database Migrations
       run: |
-        # Start de executie en vang de unieke ID op
-        EXECUTION_ID=$(gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --format="value(metadata.name)")
-        echo "Execution started with ID: $EXECUTION_ID"
-
-        # Wacht op de voltooiing van de specifieke executie.
-        # Als dit commando faalt (exit code != 0), voer dan het 'describe' commando uit.
-        gcloud run jobs executions wait $EXECUTION_ID --region ${{ env.REGION }} || {
-          echo "::error::Migration job execution failed. Fetching detailed logs..."
-          gcloud run jobs executions describe $EXECUTION_ID --region ${{ env.REGION }}
+        echo "Executing database migration job and waiting for completion..."
+        gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait || {
+          echo "::error::Migration job execution failed! Please check the Google Cloud Console for detailed logs of the last failed execution for the 'migrate-database-staging' job. The error is likely in the application code or network configuration."
           exit 1
         }
-
         echo "Migration job execution succeeded."
 
     - name: Comment PR with staging URL
