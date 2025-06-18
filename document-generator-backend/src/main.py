@@ -27,18 +27,17 @@ from src.models.order import Order, OrderItem
 from src.models.document import DocumentTemplate, GeneratedDocument
 from src.models.system import SystemSetting, WidgetConfiguration, SheetsyncLog, AuditLog
 
-# Import routes
-from src.routes.auth import auth_bp
-from src.routes.users import users_bp
-from src.routes.customers import customers_bp
-from src.routes.products import products_bp
-from src.routes.orders import orders_bp
-from src.routes.documents import documents_bp
-from src.routes.dashboard import dashboard_bp
-from src.routes.admin import admin_bp
-
 def create_app(config_name='development'):
     """Application factory pattern"""
+    from src.routes.auth import auth_bp
+    from src.routes.users import users_bp
+    from src.routes.customers import customers_bp
+    from src.routes.products import products_bp
+    from src.routes.orders import orders_bp
+    from src.routes.documents import documents_bp
+    from src.routes.dashboard import dashboard_bp
+    from src.routes.admin import admin_bp
+
     app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
     
     # Configuration
@@ -197,17 +196,4 @@ def create_app(config_name='development'):
             print(f"❌ Fout bij aanmaken database tabellen: {e}")
     
     return app
-
-# Create app instance
-app = create_app()
-
-if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
-    debug = os.getenv('FLASK_ENV') == 'development'
-    
-    print(f"🚀 Starting Document Generator API on port {port}")
-    print(f"🔧 Debug mode: {debug}")
-    print(f"🗄️  Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
-    
-    app.run(host='0.0.0.0', port=port, debug=debug)
 
