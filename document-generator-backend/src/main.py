@@ -9,9 +9,6 @@ from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
-
-# Initialize Flask-Migrate extension without app context
-migrate = Migrate()
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -85,9 +82,9 @@ def create_app(config_name='development'):
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', '/tmp/uploads')
     
-    # Initialize extensions
+    # Initialize extensions within the application context
     db.init_app(app)
-
+    migrate = Migrate(app, db)
     # Bind the Migrate instance to the app
     migrate.init_app(app, db)
     
