@@ -55,6 +55,16 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov
 
+    - name: Initialize Database Migrations
+      working-directory: ./document-generator-backend
+      env:
+        FLASK_APP: app
+      run: |
+        if [ ! -d "migrations" ]; then
+          flask db init
+        fi
+        flask db migrate -m "Initial migration."
+
     - name: Run tests
       working-directory: ./document-generator-backend
       env:
