@@ -87,7 +87,10 @@ def create_app(config_name='development'):
     
     # Initialize extensions
     db.init_app(app)
+
+    # Bind the Migrate instance to the app
     migrate.init_app(app, db)
+    
     jwt = JWTManager(app)
     
     # Enable CORS for all routes
