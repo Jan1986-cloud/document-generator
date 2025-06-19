@@ -219,8 +219,8 @@ jobs:
           --service-account ${{ env.GCP_APP_SA_EMAIL }} \
           --set-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
-          --command "flask" \
-          --args "db,upgrade"
+          --command "python" \
+          --args "-m,flask,db,upgrade"
           
         gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait
 
@@ -253,41 +253,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Google Cloud CLI
-      uses: google-github-actions/setup-gcloud@v1
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v2'
       with:
-        service_account_key: ${{ secrets.GOOGLE_CLOUD_SA_KEY }}
-        project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-    - name: Configure Docker to use gcloud as a credential helper
-      run: gcloud auth configure-docker
+    - run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
     - name: Deploy Backend to Cloud Run
       id: deploy-backend
       run: |
-        cd document-generator-backend
-
         IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}"
-
-        # Build and push image
-        docker build -t $IMAGE_URL:$GITHUB_SHA .
+        docker build -t $IMAGE_URL:$GITHUB_SHA ./document-generator-backend
         docker push $IMAGE_URL:$GITHUB_SHA
-
-        # Deploy to Cloud Run
-        gcloud run deploy $BACKEND_SERVICE \
-          --image $IMAGE_URL:$GITHUB_SHA \
-          --platform managed \
-          --region $REGION \
-          --allow-unauthenticated \
-          --service-account ${{ secrets.GCP_APP_SA_EMAIL }} \
-          --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
-          --set-secrets "DATABASE_URL=database-url:latest,JWT_SECRET_KEY=jwt-secret-key:latest" \
-          --memory 2Gi \
-          --cpu 2 \
-          --concurrency 80 \
-          --timeout 300 \
-          --max-instances 20 \
-          --port 8080
+        gcloud run deploy ${{ env.BACKEND_SERVICE }} --image $IMAGE_URL:$GITHUB_SHA --platform managed --region ${{ env.REGION }} --allow-unauthenticated --service-account ${{ secrets.GCP_APP_SA_EMAIL }} --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE_PRODUCTION }} --set-secrets "DATABASE_URL=db-production-password:latest,JWT_SECRET_KEY=jwt-production-secret:latest"
         
         # Get backend URL
         BACKEND_URL=$(gcloud run services describe $BACKEND_SERVICE --region=$REGION --format="value(status.url)")
@@ -341,8 +320,8 @@ jobs:
           --image $IMAGE_URL:$GITHUB_SHA \
           --region $REGION \
           --service-account ${{ secrets.GCP_APP_SA_EMAIL }} \
-          --set-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
-          --set-secrets "DATABASE_URL=database-url:latest" \
+          --set-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE_PRODUCTION }} \
+          --set-secrets "DATABASE_URL=db-production-password:latest" \
           --command "python" \
           --args "-c,\"from src.models.database import db; db.create_all(); print('Database tables created successfully')\""
         
