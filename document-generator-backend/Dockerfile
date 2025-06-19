@@ -19,5 +19,5 @@ COPY . .
 EXPOSE 8080
 
 # Start de applicatie met Gunicorn via de correcte app-instantie in app.py
-# Dit leest de $PORT variabele die Cloud Run aanlevert
-CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 app:app
+# Dit is de definitieve, correcte regel
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 "app:app"
