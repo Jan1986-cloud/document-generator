@@ -222,23 +222,21 @@ jobs:
           --service-account ${{ env.GCP_APP_SA_EMAIL }} \
           --set-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
-          --set-env-vars "FLASK_APP=app" \
-          --command "python" \
-          --args='-m,flask,db,upgrade'
+      --set-env-vars "FLASK_APP=app" \
+      --command "python" \
+      --args='-m,flask,db,upgrade'
 
-    - name: Show Migration Job Network Config
-      run: gcloud run jobs describe migrate-database-staging --region ${{ env.REGION }}
+- name: Show Migration Job Network Config
+  run: gcloud run jobs describe migrate-database-staging --region ${{ env.REGION }}
 
-    - name: Execute Database Migrations
-      run: |
-        echo "Executing database migration job and waiting for completion..."
-        gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait || {
-          echo "::error::Migration job execution failed! Please check the Google Cloud Console for detailed logs of the last failed execution for the 'migrate-database-staging' job. The error is likely in the application code or network configuration."
-          exit 1
-        }
-        echo "Migration job execution succeeded."
-
-    - name: Comment PR with staging URL
+- name: Execute Database Migrations
+  run: |
+    echo "Executing database migration job and waiting for completion..."
+    gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait || {
+      echo "::error::Migration job execution failed! Please check the Google Cloud Console for detailed logs of the last failed execution for the 'migrate-database-staging' job. The error is likely in the application code or network configuration."
+      exit 1
+    }
+    echo "Migration job execution succeeded."
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
       with:
@@ -267,35 +265,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Google Cloud CLI
-      uses: google-github-actions/setup-gcloud@v1
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v2'
       with:
-        service_account_key: ${{ secrets.GOOGLE_CLOUD_SA_KEY }}
-        project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-    - name: Configure Docker to use gcloud as a credential helper
-      run: gcloud auth configure-docker
+    - run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
     - name: Deploy Backend to Cloud Run
       id: deploy-backend
       run: |
-        cd document-generator-backend
-
         IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}"
-
-        # Build and push image
-        docker build -t $IMAGE_URL:$GITHUB_SHA .
+        docker build -t $IMAGE_URL:$GITHUB_SHA ./document-generator-backend
         docker push $IMAGE_URL:$GITHUB_SHA
-
-        # Deploy to Cloud Run
-        gcloud run deploy ${{ env.BACKEND_SERVICE }} \
-          --image $IMAGE_URL:$GITHUB_SHA \
-          --platform managed \
-          --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --service-account ${{ secrets.GCP_APP_SA_EMAIL }} \
-          --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
-          --set-secrets "DATABASE_URL=database-url:latest,JWT_SECRET_KEY=jwt-secret-key:latest"
+        gcloud run deploy ${{ env.BACKEND_SERVICE }} --image $IMAGE_URL:$GITHUB_SHA --platform managed --region ${{ env.REGION }} --allow-unauthenticated --service-account ${{ secrets.GCP_APP_SA_EMAIL }} --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE_PRODUCTION }} --set-secrets "DATABASE_URL=db-production-password:latest,JWT_SECRET_KEY=jwt-production-secret:latest"
         
         # Get backend URL
         BACKEND_URL=$(gcloud run services describe $BACKEND_SERVICE --region=$REGION --format="value(status.url)")
@@ -349,8 +332,8 @@ jobs:
           --image $IMAGE_URL:$GITHUB_SHA \
           --region $REGION \
           --service-account ${{ secrets.GCP_APP_SA_EMAIL }} \
-          --set-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
-          --set-secrets "DATABASE_URL=database-url:latest" \
+          --set-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE_PRODUCTION }} \
+          --set-secrets "DATABASE_URL=db-production-password:latest" \
           --command "python" \
           --args='-m,flask,db,upgrade'
 

@@ -1,4 +1,3 @@
-# Gebruik een officiële Python runtime als base image
 FROM python:3.11-slim
 
 # Zet de working directory in de container
@@ -11,11 +10,7 @@ ENV PYTHONPATH /app
 # Kopieer de requirements en installeer ze eerst om gebruik te maken van Docker layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Kopieer de rest van de applicatiecode
 COPY . .
-
-# Definieer de poort die de container zal exposen
 EXPOSE 8080
 
 # Start de applicatie met Gunicorn via de correcte app-instantie in app.py
