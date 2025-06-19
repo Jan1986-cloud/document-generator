@@ -65,9 +65,11 @@ jobs:
       with:
         node-version: '20'
         cache: 'pnpm'
+        # DEZE REGEL IS DE OPLOSSING:
+        cache-dependency-path: 'document-generator-frontend/pnpm-lock.yaml'
     - name: Install dependencies
       working-directory: ./document-generator-frontend
-      run: pnpm install --no-frozen-lockfile # Correcte commando
+      run: pnpm install --no-frozen-lockfile
     - name: Build application
       working-directory: ./document-generator-frontend
       run: pnpm run build
