@@ -58,18 +58,21 @@ jobs:
     - name: Run tests
       working-directory: ./document-generator-backend
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+        FLASK_APP: "src.main:create_app()"
         JWT_SECRET_KEY: test-secret-key
         FLASK_ENV: testing
       run: |
-        # Create test database tables
-        python create_tables.py
-        
-        # Run tests (when implemented)
-        # pytest tests/ --cov=src --cov-report=xml
-        
-        echo "Backend tests passed (placeholder)"
+        # Controleer of de database bereikbaar is
+        pip install psycopg2-binary
+        python -c "import os, psycopg2; conn = psycopg2.connect(os.environ['DATABASE_URL']); conn.close(); print('Database connection successful!')"
 
+        # Creëer de tabellen met de migraties
+        flask db upgrade
+
+        # Voer tests uit (nu nog als placeholder)
+        # pytest tests/ --cov=src --cov-report=xml
+        echo "Backend tests passed (placeholder)"
   # Test Frontend
   test-frontend:
     runs-on: ubuntu-latest
@@ -98,7 +101,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: ./document-generator-frontend
-      run: pnpm install --no-frozen-lockfile
+      run: pnpm install --frozen-lockfile=false
 
     - name: Run linting
       working-directory: ./document-generator-frontend
@@ -149,7 +152,7 @@ jobs:
       contents: 'read'
       id-token: 'write'
     env:
-      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
       REGION: ${{ secrets.REGION }}
       ARTIFACT_REPO: ${{ secrets.ARTIFACT_REPO }}
       BACKEND_SERVICE: 'document-generator-backend'
@@ -209,22 +212,31 @@ jobs:
         FRONTEND_URL=$(gcloud run services describe ${{ env.FRONTEND_SERVICE }} --region=${{ env.REGION }} --format="value(status.url)")
         echo "frontend-url=$FRONTEND_URL" >> $GITHUB_OUTPUT
 
-    - name: Run Database Migrations
+    - name: Deploy Database Migration Job
       run: |
         IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.BACKEND_SERVICE }}"
-        
+
         gcloud run jobs deploy migrate-database-staging \
           --image $IMAGE_URL:$GITHUB_SHA \
           --region ${{ env.REGION }} \
           --service-account ${{ env.GCP_APP_SA_EMAIL }} \
           --set-cloudsql-instances ${{ env.CLOUDSQL_INSTANCE }} \
           --set-secrets "DATABASE_URL=db-app-password:latest" \
-          --command "python" \
-          --args "-m,flask,db,upgrade"
-          
-        gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait
+      --set-env-vars "FLASK_APP=app" \
+      --command "python" \
+      --args='-m,flask,db,upgrade'
 
-    - name: Comment PR with staging URL
+- name: Show Migration Job Network Config
+  run: gcloud run jobs describe migrate-database-staging --region ${{ env.REGION }}
+
+- name: Execute Database Migrations
+  run: |
+    echo "Executing database migration job and waiting for completion..."
+    gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait || {
+      echo "::error::Migration job execution failed! Please check the Google Cloud Console for detailed logs of the last failed execution for the 'migrate-database-staging' job. The error is likely in the application code or network configuration."
+      exit 1
+    }
+    echo "Migration job execution succeeded."
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
       with:
@@ -323,9 +335,9 @@ jobs:
           --set-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE_PRODUCTION }} \
           --set-secrets "DATABASE_URL=db-production-password:latest" \
           --command "python" \
-          --args "-c,\"from src.models.database import db; db.create_all(); print('Database tables created successfully')\""
-        
-        gcloud run jobs execute migrate-database --region $REGION --wait
+          --args='-m,flask,db,upgrade'
+
+        gcloud run jobs execute migrate-database --region $REGION --wait || exit 1
 
     - name: Create GitHub Release
       uses: actions/create-release@v1
