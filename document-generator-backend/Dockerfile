@@ -18,6 +18,6 @@ COPY . .
 # Definieer de poort die de container zal exposen
 EXPOSE 8080
 
-# Start de applicatie met Gunicorn door de app factory aan te roepen
-# Dit leest de $PORT variabele die Cloud Run aanlevert
-CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 "src.main:create_app()"
+# Start de applicatie met Gunicorn via de correcte app-instantie in app.py
+# Dit is de definitieve, correcte regel
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 "app:app"
