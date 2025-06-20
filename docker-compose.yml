@@ -83,4 +83,3 @@ volumes:
 networks:
   default:
     name: document-generator-network
-
