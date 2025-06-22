@@ -175,23 +175,11 @@ resource "google_sql_user" "user" {
   password = random_password.db_password.result
 }
 
-# Service Accounts
-resource "google_service_account" "app_service_account" {
-  account_id   = "${var.project_name}-app"
-  display_name = "Document Generator App Service Account"
-  description  = "Service account for the Document Generator application runtime"
-}
-
-resource "google_service_account" "deploy_service_account" {
-  account_id   = "${var.project_name}-deploy"
-  display_name = "Document Generator Deploy Service Account"
-  description  = "Service account for deploying the Document Generator application"
-}
-
-resource "google_service_account" "backup_service_account" {
-  account_id   = "${var.project_name}-backup"
-  display_name = "Document Generator Backup Service Account"
-  description  = "Service account for backup operations"
+# Service Accounts handled outside Terraform
+locals {
+  app_service_account_email    = "${var.project_name}-app@${var.project_id}.iam.gserviceaccount.com"
+  deploy_service_account_email = "${var.project_name}-deploy@${var.project_id}.iam.gserviceaccount.com"
+  backup_service_account_email = "${var.project_name}-backup@${var.project_id}.iam.gserviceaccount.com"
 }
 
 # IAM Roles for App Service Account
@@ -207,7 +195,7 @@ resource "google_project_iam_member" "app_service_account_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${google_service_account.app_service_account.email}"
+  member  = "serviceAccount:${local.app_service_account_email}"
 }
 
 # IAM Roles for Deploy Service Account
@@ -221,7 +209,7 @@ resource "google_project_iam_member" "deploy_service_account_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${google_service_account.deploy_service_account.email}"
+  member  = "serviceAccount:${local.deploy_service_account_email}"
 }
 
 # IAM Roles for Backup Service Account
@@ -233,7 +221,7 @@ resource "google_project_iam_member" "backup_service_account_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${google_service_account.backup_service_account.email}"
+  member  = "serviceAccount:${local.backup_service_account_email}"
 }
 
 # Storage Buckets
@@ -451,12 +439,12 @@ resource "google_secret_manager_secret_version" "google_api_credentials" {
     project_id                  = var.project_id
     private_key_id              = "placeholder"
     private_key                 = "-----BEGIN PRIVATE KEY-----\nplaceholder\n-----END PRIVATE KEY-----\n"
-    client_email                = google_service_account.app_service_account.email
+    client_email                = local.app_service_account_email
     client_id                   = "placeholder"
     auth_uri                    = "https://accounts.google.com/o/oauth2/auth"
     token_uri                   = "https://oauth2.googleapis.com/token"
     auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
-    client_x509_cert_url        = "https://www.googleapis.com/robot/v1/metadata/x509/${urlencode(google_service_account.app_service_account.email)}"
+    client_x509_cert_url        = "https://www.googleapis.com/robot/v1/metadata/x509/${urlencode(local.app_service_account_email)}"
   })
 }
 
@@ -538,17 +526,17 @@ output "vpc_connector_name" {
 
 output "app_service_account_email" {
   description = "Email of the app service account"
-  value       = google_service_account.app_service_account.email
+  value       = local.app_service_account_email
 }
 
 output "deploy_service_account_email" {
   description = "Email of the deploy service account"
-  value       = google_service_account.deploy_service_account.email
+  value       = local.deploy_service_account_email
 }
 
 output "backup_service_account_email" {
   description = "Email of the backup service account"
-  value       = google_service_account.backup_service_account.email
+  value       = local.backup_service_account_email
 }
 
 output "storage_bucket_documents" {
