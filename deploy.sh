@@ -26,6 +26,15 @@ fi
 PROJECT_ID=$(grep "id:" config.yaml | head -1 | sed 's/.*id: *"\([^"]*\)".*/\1/')
 REGION=$(grep "region:" config.yaml | head -1 | sed 's/.*region: *"\([^"]*\)".*/\1/')
 ENVIRONMENT=$(grep "environment:" config.yaml | head -1 | sed 's/.*environment: *"\([^"]*\)".*/\1/')
+PROJECT_NAME=$(grep -A1 "app:" config.yaml | grep "name:" | head -1 | sed 's/.*name: *"\([^"]*\)".*/\1/')
+
+APP_SA_ID="${PROJECT_NAME}-app"
+DEPLOY_SA_ID="${PROJECT_NAME}-deploy"
+BACKUP_SA_ID="${PROJECT_NAME}-backup"
+
+APP_SA_EMAIL="${APP_SA_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
+DEPLOY_SA_EMAIL="${DEPLOY_SA_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
+BACKUP_SA_EMAIL="${BACKUP_SA_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
 
 echo -e "${YELLOW}📋 Configuratie:${NC}"
 echo "Project ID: $PROJECT_ID"
@@ -61,6 +70,14 @@ if ! command -v terraform &> /dev/null; then
     exit 1
 fi
 echo -e "${GREEN}✅ Terraform available${NC}"
+
+echo "Ensuring service accounts exist..."
+gcloud iam service-accounts describe "$APP_SA_EMAIL" --project="$PROJECT_ID" >/dev/null 2>&1 || \
+  gcloud iam service-accounts create "$APP_SA_ID" --project="$PROJECT_ID" --display-name="Document Generator App Service Account"
+gcloud iam service-accounts describe "$DEPLOY_SA_EMAIL" --project="$PROJECT_ID" >/dev/null 2>&1 || \
+  gcloud iam service-accounts create "$DEPLOY_SA_ID" --project="$PROJECT_ID" --display-name="Document Generator Deploy Service Account"
+gcloud iam service-accounts describe "$BACKUP_SA_EMAIL" --project="$PROJECT_ID" >/dev/null 2>&1 || \
+  gcloud iam service-accounts create "$BACKUP_SA_ID" --project="$PROJECT_ID" --display-name="Document Generator Backup Service Account"
 
 
 echo -e "${BLUE}🏗️  Step 1: Infrastructure Deployment${NC}"
