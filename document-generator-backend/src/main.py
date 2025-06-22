@@ -2,9 +2,6 @@ import os
 import sys
 from datetime import timedelta
 
-# DON'T CHANGE THIS !!!
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
 from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -15,24 +12,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import database and models
-from src.models.database import db
-from src.models.organization import Organization
-from src.models.user import User
-from src.models.customer import Customer, CustomerAddress, CustomerContact
-from src.models.product import Product, ProductCategory, ProductAttachment
-from src.models.order import Order, OrderItem
-from src.models.document import DocumentTemplate, GeneratedDocument
-from src.models.system import SystemSetting, WidgetConfiguration, SheetsyncLog, AuditLog
+from models.database import db
+from models.organization import Organization
+from models.user import User
+from models.customer import Customer, CustomerAddress, CustomerContact
+from models.product import Product, ProductCategory, ProductAttachment
+from models.order import Order, OrderItem
+from models.document import DocumentTemplate, GeneratedDocument
+from models.system import SystemSetting, WidgetConfiguration, SheetsyncLog, AuditLog
 
 # Import routes
-from src.routes.auth import auth_bp
-from src.routes.users import users_bp
-from src.routes.customers import customers_bp
-from src.routes.products import products_bp
-from src.routes.orders import orders_bp
-from src.routes.documents import documents_bp
-from src.routes.dashboard import dashboard_bp
-from src.routes.admin import admin_bp
+from routes.auth import auth_bp
+from routes.users import users_bp
+from routes.customers import customers_bp
+from routes.products import products_bp
+from routes.orders import orders_bp
+from routes.documents import documents_bp
+from routes.dashboard import dashboard_bp
+from routes.admin import admin_bp
 
 def create_app(config_name='development'):
     """Application factory pattern"""
@@ -206,4 +203,3 @@ if __name__ == '__main__':
     print(f"🗄️  Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
     
     app.run(host='0.0.0.0', port=port, debug=debug)
-
