@@ -62,10 +62,10 @@ jobs:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         JWT_SECRET_KEY: test-secret-key
         FLASK_ENV: testing
-        PYTHONPATH: /home/runner/work/document-generator/document-generator/document-generator-backend/src
+        PYTHONPATH: "${{ github.workspace }}/document-generator-backend:${{ github.workspace }}/document-generator-backend/src"
       run: |
         # Create test database tables
-        python -c "import sys; sys.path.insert(0, 'src'); from models.database import db; from src.main import create_app; app = create_app(); app.app_context().push(); db.create_all()"
+        python -c "from src.models.database import db; from src.main import create_app; app = create_app(); app.app_context().push(); db.create_all()"
         
         echo "Backend tests passed"
 
@@ -227,7 +227,7 @@ jobs:
           --set-secrets "DATABASE_URL=database-url-staging:latest" \
           --set-env-vars "PYTHONPATH=/app/src:/app" \
           --command "python" \
-          --args "-c,from models.database import db; from main import create_app; app = create_app(); app.app_context().push(); db.create_all(); print('Database tables created successfully')" \
+          --args "-c,from src.models.database import db; from src.main import create_app; app = create_app(); app.app_context().push(); db.create_all(); print('Database tables created successfully')" \
           --replace || true
         
         gcloud run jobs execute migrate-database-staging --region ${{ env.REGION }} --wait
@@ -334,7 +334,7 @@ jobs:
           --set-secrets "DATABASE_URL=database-url:latest" \
           --set-env-vars "PYTHONPATH=/app/src:/app" \
           --command "python" \
-          --args "-c,from models.database import db; from main import create_app; app = create_app(); app.app_context().push(); db.create_all(); print('Database tables created successfully')" \
+          --args "-c,from src.models.database import db; from src.main import create_app; app = create_app(); app.app_context().push(); db.create_all(); print('Database tables created successfully')" \
           --replace || true
         
         gcloud run jobs execute migrate-database --region ${{ env.REGION }} --wait
