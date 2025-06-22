@@ -17,6 +17,14 @@ variable "zone" {
   default     = "europe-west4-a"
 }
 
+variable "access_token" {
+  description = "Temporary GCP access token for debugging"
+  type        = string
+  sensitive   = true
+  nullable    = true
+  default     = null
+}
+
 variable "environment" {
   description = "Environment name (development, staging, production)"
   type        = string
