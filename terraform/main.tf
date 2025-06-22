@@ -175,11 +175,20 @@ resource "google_sql_user" "user" {
   password = random_password.db_password.result
 }
 
-# Service Accounts handled outside Terraform
-locals {
-  app_service_account_email    = "${var.project_name}-app@${var.project_id}.iam.gserviceaccount.com"
-  deploy_service_account_email = "${var.project_name}-deploy@${var.project_id}.iam.gserviceaccount.com"
-  backup_service_account_email = "${var.project_name}-backup@${var.project_id}.iam.gserviceaccount.com"
+# Service Accounts managed outside Terraform
+data "google_service_account" "app_service_account" {
+  account_id = "${var.project_name}-app"
+  project    = var.project_id
+}
+
+data "google_service_account" "deploy_service_account" {
+  account_id = "${var.project_name}-deploy"
+  project    = var.project_id
+}
+
+data "google_service_account" "backup_service_account" {
+  account_id = "${var.project_name}-backup"
+  project    = var.project_id
 }
 
 # IAM Roles for App Service Account
@@ -195,7 +204,7 @@ resource "google_project_iam_member" "app_service_account_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${local.app_service_account_email}"
+  member  = "serviceAccount:${data.google_service_account.app_service_account.email}"
 }
 
 # IAM Roles for Deploy Service Account
@@ -209,7 +218,7 @@ resource "google_project_iam_member" "deploy_service_account_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${local.deploy_service_account_email}"
+  member  = "serviceAccount:${data.google_service_account.deploy_service_account.email}"
 }
 
 # IAM Roles for Backup Service Account
@@ -221,7 +230,7 @@ resource "google_project_iam_member" "backup_service_account_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${local.backup_service_account_email}"
+  member  = "serviceAccount:${data.google_service_account.backup_service_account.email}"
 }
 
 # Storage Buckets
@@ -439,12 +448,12 @@ resource "google_secret_manager_secret_version" "google_api_credentials" {
     project_id                  = var.project_id
     private_key_id              = "placeholder"
     private_key                 = "-----BEGIN PRIVATE KEY-----\nplaceholder\n-----END PRIVATE KEY-----\n"
-    client_email                = local.app_service_account_email
+    client_email                = data.google_service_account.app_service_account.email
     client_id                   = "placeholder"
     auth_uri                    = "https://accounts.google.com/o/oauth2/auth"
     token_uri                   = "https://oauth2.googleapis.com/token"
     auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
-    client_x509_cert_url        = "https://www.googleapis.com/robot/v1/metadata/x509/${urlencode(local.app_service_account_email)}"
+    client_x509_cert_url        = "https://www.googleapis.com/robot/v1/metadata/x509/${urlencode(data.google_service_account.app_service_account.email)}"
   })
 }
 
@@ -526,17 +535,17 @@ output "vpc_connector_name" {
 
 output "app_service_account_email" {
   description = "Email of the app service account"
-  value       = local.app_service_account_email
+  value       = data.google_service_account.app_service_account.email
 }
 
 output "deploy_service_account_email" {
   description = "Email of the deploy service account"
-  value       = local.deploy_service_account_email
+  value       = data.google_service_account.deploy_service_account.email
 }
 
 output "backup_service_account_email" {
   description = "Email of the backup service account"
-  value       = local.backup_service_account_email
+  value       = data.google_service_account.backup_service_account.email
 }
 
 output "storage_bucket_documents" {
