@@ -1,5 +1,9 @@
 name: Deploy to Google Cloud (CORRECTED)
 
+permissions:
+  contents: read
+  id-token: write
+  
 on:
   push:
     branches: [ main, production ]
