@@ -12,14 +12,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import database and models
-from models.database import db
-from models.organization import Organization
-from models.user import User
-from models.customer import Customer, CustomerAddress, CustomerContact
-from models.product import Product, ProductCategory, ProductAttachment
-from models.order import Order, OrderItem
-from models.document import DocumentTemplate, GeneratedDocument
-from models.system import SystemSetting, WidgetConfiguration, SheetsyncLog, AuditLog
+from src.models.database import db
+from src.models.organization import Organization
+from src.models.user import User
+from src.models.customer import Customer, CustomerAddress, CustomerContact
+from src.models.product import Product, ProductCategory, ProductAttachment
+from src.models.order import Order, OrderItem
+from src.models.document import DocumentTemplate, GeneratedDocument
+from src.models.system import SystemSetting, WidgetConfiguration, SheetsyncLog, AuditLog
 
 # Import routes
 from routes.auth import auth_bp
