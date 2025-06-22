@@ -80,8 +80,11 @@ db_disk_size      = $(grep "disk_size:" ../config.yaml | sed 's/.*disk_size: *\(
 EOF
 
 # Initialize and apply Terraform
+# Clean up any existing local Terraform data to avoid backend configuration errors
+# (equivalent to running "rm -rf terraform/.terraform*" from the repository root)
 echo "Initializing Terraform..."
-terraform init
+rm -rf .terraform*
+terraform init -reconfigure
 
 echo "Planning infrastructure..."
 terraform plan -var-file="terraform.tfvars" -out=tfplan
