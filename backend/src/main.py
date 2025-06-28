@@ -6,6 +6,7 @@ from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
+from sqlalchemy import text
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -85,7 +86,7 @@ def create_app(config_name='production'):
         """Health check endpoint for Railway load balancers"""
         try:
             # Test database connection
-            db.session.execute('SELECT 1')
+            db.session.execute(text('SELECT 1'))
             return jsonify({
                 'status': 'healthy',
                 'database': 'connected',
