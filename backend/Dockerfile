@@ -4,6 +4,9 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+# Default port if Railway does not inject one
+ENV PORT=8080
+
 # Install system dependencies
 RUN apt-get update
 RUN apt-get install -y gcc g++ curl
