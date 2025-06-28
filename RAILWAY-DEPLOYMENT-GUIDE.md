@@ -119,7 +119,7 @@ VITE_API_BASE_URL=https://your-railway-backend-url.railway.app/api
     "dockerfilePath": "backend/Dockerfile"  // Pad naar Dockerfile
   },
   "deploy": {
-    "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 2 src.main:app",
+    "startCommand": "gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 src.main:app",
     "healthcheckPath": "/health",      // Health check endpoint
     "restartPolicyType": "ON_FAILURE"  // Restart bij crashes
   }
