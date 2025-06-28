@@ -5,7 +5,7 @@
     "dockerfilePath": "backend/Dockerfile"
   },
   "deploy": {
-    "startCommand": "flask db upgrade && gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 src.main:app",
+    "startCommand": "flask db upgrade && gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 \"src.main:create_app()\"",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
@@ -15,9 +15,9 @@
     "production": {
       "variables": {
         "FLASK_ENV": "production",
-        "PYTHONPATH": "/app/src:/app"
+        "PYTHONPATH": "/app/src:/app",
+        "FLASK_APP": "src.main:create_app"
       }
     }
   }
 }
-
