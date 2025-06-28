@@ -36,7 +36,9 @@ def create_app(config_name='production'):
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     else:
         # Fallback to SQLite for local development
-        app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+        db_dir = os.path.join(os.path.dirname(__file__), 'database')
+        os.makedirs(db_dir, exist_ok=True)
+        app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(db_dir, 'app.db')}"
     
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
