@@ -5,11 +5,9 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update
+RUN apt-get install -y gcc g++ curl
+RUN rm -rf /var/lib/apt/list/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
