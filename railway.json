@@ -15,7 +15,7 @@
     "production": {
       "variables": {
         "FLASK_ENV": "production",
-        "PYTHONPATH": "/app/src:/app"
+        "PYTHONPATH": "/app/backend"
       }
     }
   }
