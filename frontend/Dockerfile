@@ -4,6 +4,9 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Default port if Railway does not inject one
+ENV PORT=8080
+
 # Copy package files
 COPY frontend/package*.json ./
 COPY frontend/pnpm-lock.yaml* ./

@@ -6,6 +6,7 @@ from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
+from sqlalchemy import text
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -13,23 +14,11 @@ load_dotenv()
 
 # Import database and models
 from models.database import db
-from models.organization import Organization
+# Only import models that exist in this lightweight example
 from models.user import User
-from models.customer import Customer, CustomerAddress, CustomerContact
-from models.product import Product, ProductCategory, ProductAttachment
-from models.order import Order, OrderItem
-from models.document import DocumentTemplate, GeneratedDocument
-from models.system import SystemSetting, WidgetConfiguration, SheetsyncLog, AuditLog
 
 # Import routes
-from routes.auth import auth_bp
-from routes.users import users_bp
-from routes.customers import customers_bp
-from routes.products import products_bp
-from routes.orders import orders_bp
-from routes.documents import documents_bp
-from routes.dashboard import dashboard_bp
-from routes.admin import admin_bp
+# Blueprints for extra routes are optional and not provided in this repo
 
 def create_app(config_name='production'):
     """Application factory pattern - Railway optimized"""
@@ -88,15 +77,8 @@ def create_app(config_name='production'):
     # Enable CORS for all routes
     CORS(app, origins="*", supports_credentials=True)
     
-    # Register blueprints
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(users_bp, url_prefix='/api/users')
-    app.register_blueprint(customers_bp, url_prefix='/api/customers')
-    app.register_blueprint(products_bp, url_prefix='/api/products')
-    app.register_blueprint(orders_bp, url_prefix='/api/orders')
-    app.register_blueprint(documents_bp, url_prefix='/api/documents')
-    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    # Blueprint registration is omitted because the blueprints are not
+    # included in this simplified repository. Add them here when available.
     
     # Health check endpoint for Railway
     @app.route('/health')
@@ -104,7 +86,7 @@ def create_app(config_name='production'):
         """Health check endpoint for Railway load balancers"""
         try:
             # Test database connection
-            db.session.execute('SELECT 1')
+            db.session.execute(text('SELECT 1'))
             return jsonify({
                 'status': 'healthy',
                 'database': 'connected',
