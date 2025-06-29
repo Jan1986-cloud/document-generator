@@ -248,6 +248,7 @@ CNAME documentgenerator your-app.railway.app
 ```bash
 # Update frontend environment:
 VITE_API_BASE_URL=https://your-railway-backend-url.railway.app/api
+# Of kopieer `frontend/.env.example` naar `frontend/.env` en pas de URL aan
 
 # Of update nginx.conf proxy_pass:
 location /api/ {
