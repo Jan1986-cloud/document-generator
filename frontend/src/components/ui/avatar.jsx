@@ -7,13 +7,16 @@ import { cn } from "@/lib/utils"
 
 function Avatar({
   className,
+  children,
   ...props
 }) {
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
       className={cn("relative flex size-8 shrink-0 overflow-hidden rounded-full", className)}
-      {...props} />
+      {...props}>
+      {children}
+    </AvatarPrimitive.Root>
   );
 }
 

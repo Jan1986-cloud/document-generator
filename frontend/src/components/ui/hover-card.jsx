@@ -4,9 +4,14 @@ import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
 import { cn } from "@/lib/utils"
 
 function HoverCard({
+  children,
   ...props
 }) {
-  return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
+  return (
+    <HoverCardPrimitive.Root data-slot="hover-card" {...props}>
+      {children}
+    </HoverCardPrimitive.Root>
+  );
 }
 
 function HoverCardTrigger({

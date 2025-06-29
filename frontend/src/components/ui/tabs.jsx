@@ -7,13 +7,17 @@ import { cn } from "@/lib/utils"
 
 function Tabs({
   className,
+  children,
   ...props
 }) {
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
       className={cn("flex flex-col gap-2", className)}
-      {...props} />
+      {...props}
+    >
+      {children}
+    </TabsPrimitive.Root>
   );
 }
 

@@ -7,9 +7,14 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function DropdownMenu({
+  children,
   ...props
 }) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+  return (
+    <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props}>
+      {children}
+    </DropdownMenuPrimitive.Root>
+  );
 }
 
 function DropdownMenuPortal({

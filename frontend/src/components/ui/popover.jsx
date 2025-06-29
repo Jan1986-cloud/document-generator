@@ -6,9 +6,14 @@ import * as PopoverPrimitive from "@radix-ui/react-popover"
 import { cn } from "@/lib/utils"
 
 function Popover({
+  children,
   ...props
 }) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+  return (
+    <PopoverPrimitive.Root data-slot="popover" {...props}>
+      {children}
+    </PopoverPrimitive.Root>
+  );
 }
 
 function PopoverTrigger({
