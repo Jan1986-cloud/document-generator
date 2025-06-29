@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
-=======
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
->>>>>>> cab5961336a072fa1190d0bb41a519aff2ec65c0
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { FileText, Users, BarChart3, Settings, Plus, Download, Eye, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
