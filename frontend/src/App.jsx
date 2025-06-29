@@ -69,12 +69,12 @@ function HomePage() {
         {/* Quick Actions */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-4">
-            <Link to="/generate">
-              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
+            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
+              <Link to="/generate">
                 <Plus className="h-5 w-5 mr-2" />
                 Nieuw Document
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button variant="outline" className="px-6 py-3 text-lg">
               <FileText className="h-5 w-5 mr-2" />
               Templates Beheren
