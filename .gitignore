@@ -16,3 +16,4 @@ __pycache__/
 
 # pnpm
 frontend/dist/
+.env
