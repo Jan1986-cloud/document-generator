@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { FileText, Users, BarChart3, Settings, Plus, Download, Eye, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
@@ -57,10 +57,12 @@ function HomePage() {
         {/* Quick Actions */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-4">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Nieuw Document
-            </Button>
+            <Link to="/generate">
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
+                <Plus className="h-5 w-5 mr-2" />
+                Nieuw Document
+              </Button>
+            </Link>
             <Button variant="outline" className="px-6 py-3 text-lg">
               <FileText className="h-5 w-5 mr-2" />
               Templates Beheren
