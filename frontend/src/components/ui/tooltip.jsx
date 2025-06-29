@@ -11,11 +11,14 @@ function TooltipProvider({
 }
 
 function Tooltip({
+  children,
   ...props
 }) {
   return (
     <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+      <TooltipPrimitive.Root data-slot="tooltip" {...props}>
+        {children}
+      </TooltipPrimitive.Root>
     </TooltipProvider>
   );
 }

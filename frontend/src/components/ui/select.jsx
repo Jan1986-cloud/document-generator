@@ -5,9 +5,14 @@ import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function Select({
+  children,
   ...props
 }) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+  return (
+    <SelectPrimitive.Root data-slot="select" {...props}>
+      {children}
+    </SelectPrimitive.Root>
+  );
 }
 
 function SelectGroup({

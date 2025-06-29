@@ -7,9 +7,14 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function ContextMenu({
+  children,
   ...props
 }) {
-  return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
+  return (
+    <ContextMenuPrimitive.Root data-slot="context-menu" {...props}>
+      {children}
+    </ContextMenuPrimitive.Root>
+  );
 }
 
 function ContextMenuTrigger({

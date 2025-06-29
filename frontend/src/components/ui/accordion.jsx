@@ -5,9 +5,14 @@ import { ChevronDownIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function Accordion({
+  children,
   ...props
 }) {
-  return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
+  return (
+    <AccordionPrimitive.Root data-slot="accordion" {...props}>
+      {children}
+    </AccordionPrimitive.Root>
+  );
 }
 
 function AccordionItem({

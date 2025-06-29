@@ -5,9 +5,14 @@ import { XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function Sheet({
+  children,
   ...props
 }) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
+  return (
+    <SheetPrimitive.Root data-slot="sheet" {...props}>
+      {children}
+    </SheetPrimitive.Root>
+  );
 }
 
 function SheetTrigger({
