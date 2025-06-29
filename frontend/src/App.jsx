@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
+=======
+import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+>>>>>>> cab5961336a072fa1190d0bb41a519aff2ec65c0
 import { FileText, Users, BarChart3, Settings, Plus, Download, Eye, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
@@ -8,10 +13,17 @@ import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
+import { fetchApiInfo } from '@/lib/api.js'
 import './App.css'
 
 // Homepage Component
 function HomePage() {
+  const [apiInfo, setApiInfo] = useState(null)
+  useEffect(() => {
+    fetchApiInfo()
+      .then(setApiInfo)
+      .catch((err) => console.error('API error', err))
+  }, [])
   const stats = [
     { title: 'Documenten Gegenereerd', value: '1,234', icon: FileText, color: 'text-blue-600' },
     { title: 'Actieve Klanten', value: '89', icon: Users, color: 'text-green-600' },
@@ -52,6 +64,11 @@ function HomePage() {
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Welkom bij Document Generator</h2>
           <p className="text-lg text-gray-600">Genereer professionele documenten met gemak en snelheid</p>
+          {apiInfo && (
+            <pre className="mt-4 bg-gray-100 p-4 text-sm rounded">
+              {JSON.stringify(apiInfo, null, 2)}
+            </pre>
+          )}
         </div>
 
         {/* Quick Actions */}

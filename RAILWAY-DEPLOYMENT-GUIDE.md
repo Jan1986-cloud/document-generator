@@ -106,7 +106,7 @@ SECRET_KEY=another-secret-key-for-flask-sessions
 4. **Root Directory:** `frontend`
 5. **Environment Variables:**
 ```bash
-VITE_API_BASE_URL=https://your-railway-backend-url.railway.app/api
+VITE_API_BASE_URL=https://your-railway-backend-url.railway.app
 ```
 
 ## 🔧 Configuratie Details
@@ -247,7 +247,8 @@ CNAME documentgenerator your-app.railway.app
 ### Frontend API Connection
 ```bash
 # Update frontend environment:
-VITE_API_BASE_URL=https://your-railway-backend-url.railway.app/api
+VITE_API_BASE_URL=https://your-railway-backend-url.railway.app
+# Of kopieer `frontend/.env.example` naar `frontend/.env` en pas de URL aan
 
 # Of update nginx.conf proxy_pass:
 location /api/ {

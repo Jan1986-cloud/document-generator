@@ -38,7 +38,8 @@ SECRET_KEY=flask-secret-key
 
 **Optie B: Vercel (Sneller)**
 - Ga naar **vercel.com** → Import repo → Root: `frontend`
-- Environment: `VITE_API_BASE_URL=https://your-railway-backend.railway.app/api`
+ - Environment: `VITE_API_BASE_URL=https://your-railway-backend.railway.app`
+- Of kopieer `frontend/.env.example` naar `frontend/.env` en pas de URL aan
 
 ## ✅ Klaar!
 
