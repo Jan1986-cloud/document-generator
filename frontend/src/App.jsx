@@ -75,8 +75,8 @@ function HomePage() {
                   <Plus className="h-5 w-5 mr-2" />
                   Nieuw Document
                 </>
-              </Link>
-            </Button>
+              </Link></Button>
+
             <Button variant="outline" className="px-6 py-3 text-lg">
               <>
                 <FileText className="h-5 w-5 mr-2" />
