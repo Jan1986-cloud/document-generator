@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { FileText, Users, BarChart3, Settings, Plus, Download, Eye, Edit } from 'lucide-react'
-import { Button } from '@/components/ui/button.jsx'
+import { Button, buttonVariants } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label.jsx'
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
 import { fetchApiInfo } from '@/lib/api.js'
+import { cn } from '@/lib/utils.js'
 import './App.css'
 
 // Homepage Component
@@ -69,13 +70,16 @@ function HomePage() {
         {/* Quick Actions */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-4">
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
-              <Link to="/generate">
-                <>
-                  <Plus className="h-5 w-5 mr-2" />
-                  Nieuw Document
-                </>
-              </Link></Button>
+            <Link
+              to="/generate"
+              className={cn(
+                buttonVariants({ variant: "default" }),
+                "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg flex items-center"
+              )}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span>Nieuw Document</span>
+            </Link>
 
             <Button variant="outline" className="px-6 py-3 text-lg">
               <>
