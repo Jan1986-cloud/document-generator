@@ -1,25 +1,17 @@
-import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { FileText, Users, BarChart3, Settings, Plus, Download, Eye, Edit } from 'lucide-react'
-import { Button, buttonVariants } from '@/components/ui/button.jsx'
+import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
-import { fetchApiInfo } from '@/lib/api.js'
-import { cn } from '@/lib/utils.js'
 import './App.css'
 
 // Homepage Component
 function HomePage() {
-  const [apiInfo, setApiInfo] = useState(null)
-  useEffect(() => {
-    fetchApiInfo()
-      .then(setApiInfo)
-      .catch((err) => console.error('API error', err))
-  }, [])
   const stats = [
     { title: 'Documenten Gegenereerd', value: '1,234', icon: FileText, color: 'text-blue-600' },
     { title: 'Actieve Klanten', value: '89', icon: Users, color: 'text-green-600' },
@@ -60,27 +52,17 @@ function HomePage() {
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Welkom bij Document Generator</h2>
           <p className="text-lg text-gray-600">Genereer professionele documenten met gemak en snelheid</p>
-          {apiInfo && (
-            <pre className="mt-4 bg-gray-100 p-4 text-sm rounded">
-              {JSON.stringify(apiInfo, null, 2)}
-            </pre>
-          )}
         </div>
 
         {/* Quick Actions */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-4">
-            <Link
-              to="/generate"
-              className={cn(
-                buttonVariants({ variant: "default" }),
-                "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg flex items-center"
-              )}
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              <span>Nieuw Document</span>
-            </Link>
-
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
+              <>
+                <Plus className="h-5 w-5 mr-2" />
+                Nieuw Document
+              </>
+            </Button>
             <Button variant="outline" className="px-6 py-3 text-lg">
               <>
                 <FileText className="h-5 w-5 mr-2" />
@@ -390,4 +372,3 @@ function App() {
 }
 
 export default App
-
