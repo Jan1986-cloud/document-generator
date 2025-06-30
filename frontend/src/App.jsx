@@ -71,17 +71,22 @@ function HomePage() {
           <div className="flex flex-wrap gap-4">
             <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
               <Link to="/generate">
-                <Plus className="h-5 w-5 mr-2" />
-                Nieuw Document
-              </Link>
+                <>
+                  <Plus className="h-5 w-5 mr-2" />
+                  Nieuw Document
+                </>
+              </Link></Button>
+            <Button variant="outline" className="px-6 py-3 text-lg">
+              <>
+                <FileText className="h-5 w-5 mr-2" />
+                Templates Beheren
+              </>
             </Button>
             <Button variant="outline" className="px-6 py-3 text-lg">
-              <FileText className="h-5 w-5 mr-2" />
-              Templates Beheren
-            </Button>
-            <Button variant="outline" className="px-6 py-3 text-lg">
-              <Users className="h-5 w-5 mr-2" />
-              Klanten Beheren
+              <>
+                <Users className="h-5 w-5 mr-2" />
+                Klanten Beheren
+              </>
             </Button>
           </div>
         </div>
@@ -352,8 +357,10 @@ function DocumentGenerator() {
                   Opslaan als Concept
                 </Button>
                 <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Document Genereren
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Document Genereren
+                  </>
                 </Button>
               </div>
             </form>
